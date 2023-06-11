@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{hanging}
+\usepackage{float}
+
+\title{CS51 Final Write-Up}
+
+\begin{document}
+
+\maketitle
+
+\section{Extension Explanations} 
+My first extension to Miniml was created with the purpose of providing lexically-scoped environment semantics such that variables are able to obtain their values from declarations in their own lexical scope rather than simply utilizing the last declaration to be evaluated. With this change, the scoping rules abide by the structure of the written code, improving readability and allowing for the design of modular code (code that is able to exist in individual, abstracted modules that can only be constraining to one another through controlled channels). Thus, the implementation of lexical scoping, as a necessary building block for, say, object oriented and modular programming constructs, serves as a platform for future extensions to the Miniml. \\
+My second extension to Miniml involves the implementation of an additional atomic type of strings. After establishing the regexp for strings in miniml{\_}lex.mll, I represented the token for strings as STRING, typed in expr as String of string. To account for the string implementation, I added extra match cases to the exp{\_}to{\_}concrete{\_}string and exp{\_}to{\_}abstract{\_}string functions in expr.ml. \\
+Note that the expressions that can be done on strings are Equal and Concat. Concat is a new binop that I implemented to take two strings and perform concatenation on them. In order to parse Concat, I added the caret symbol (\^{}), matched to a token CONCAT that lies between two other tokens. The Concat expression is only applicable to strings and raises exceptions for anything than other than such. 
+
+\section{Lexical Implementation}
+Lexical scoping in Miniml can be implemented in two different ways. The first is to use substitution semantics, which is inherently lexical since it substitutes expressions one level at a time. The second method involves environment semantics and closures to "remember" the scoping environment that a value was in at the time that it was declared. In order to remember what variables translate to which values, the Set module was used to store the value-variable pairs in a set, also thereby ensuring that the same variable name will not ever be linked to two different values. \\
+We defined 3 key functions to interact with the environment set, namely extend, lookup, and close. The extend function is called when a new variable is given a value in order to add the associated value-variable pair to the set. If the variable already exists within the set, the value of that variable is simply updated. The lookup function is called when an evaluation function needs to retrieve the value of a variable from within it's environment. The close function contributes important functionality in handling closures. \\
+The eval{\_}l function is used to convert an expression of arbitrary complexity to the most simplified possible representation of its value. It extensively uses match statements to determine what to do in all cases that Miniml currently supports. The primary difference between eval{\_}l and eval{\_}d is the use of the close function in the solution to a function definition. When a function definition (such as fun x $\rightarrow$ P) is evaluated, it calls the close function to create a new instance type Closure, which contains the function expression alongside the current environment. Now, when the function is applied, it can be called within the scope of the environment in which it was originally defined. 
+
+\section{Lexical vs Dynamic Example}
+Let us know take a look at an example of differences in evaluation in lexical and dynamic scope. Let us consider the code below: \\
+let x = 1 in 
+let f = fun y $\rightarrow$ x + y in 
+let x = 2 in 
+f 3 ;; \\
+The function f is applied to 3 when the environment has value 2 assigned to x, but since the function was defined when x was equal to 3, a lexically scoped evaluator would scope f to x with value 1, resulting in a final value of 4. On the other hand, a dynamically scoped evaluator would calculate f with x of value 2 resulting in a final value of 5. \\
+Here are some screenshots of the terminal outputs of eval{\_}l and eval{\_}d, respectively. Note that the output from the terminal is in an abstract notation : \\
+
+eval{\_}l evaluates to Num(4), or, concretely, 4
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=10cm]{evall.png}
+    \caption{An image of eval{\_}l's output}
+    \label{fig:eval_output1}
+\end{figure}
+
+eval{\_}d evaluates to Num(5), or, concretely, 5
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=10cm]{evald.png}
+    \caption{An image of eval{\_}d's output}
+    \label{fig:eval_output2}
+\end{figure} 
+
+With these extensions, Miniml can now evaluate expressions lexically and dynamically, including with string inputs!
+
+\end{document}
